@@ -19,7 +19,7 @@ class OCRAPI:
         self.logger = get_logger(self.__class__.__name__)
         self.logger.info('Start read config...')
         self.config = self.read_config()
-        self.output_root_dir_path = Pth(self.config['output_root_dir_path'])
+        self.output_root_dir_path = Path(self.config['output_root_dir_path'])
         self.images_dir_path = self.output_root_dir_path / images_dir_name
         self.ocr_output_images_dir = self.output_root_dir_path / ocr_output_images_dir_name
         self.image_file_prefix = self.config['image_file_prefix']
