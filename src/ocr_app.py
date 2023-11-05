@@ -17,7 +17,7 @@ from ppocr.utils.logging import get_logger
 
 class OCRAPI:
     def __init__(self):
-        self.logger = get_logger(self.__class__.__name__, log_level=logging.INFO)
+        self.logger = get_logger(self.__class__.__name__)
         self.logger.info('Start read config...')
         self.config = self.read_config()
         self.output_root_dir_path = Path(self.config['output_root_dir_path'])
@@ -126,9 +126,9 @@ class OCRAPI:
         workbook.close()
 
         self.logger.info('Start images to pdf...')
-        input_files_path = self.ocr_output_images_dir / '*.png'
+        input_files_path = self.ocr_output_images_dir / '*.jpg'
         output_file_path = self.output_root_dir_path / r'{}_ocr.pdf'.format(input_pdf_file_path.stem)
-        'convert'
+
         process_result = subprocess.run(
             ['convert',
                 input_files_path.as_posix(),
@@ -137,7 +137,6 @@ class OCRAPI:
             stderr=subprocess.STDOUT)
 
         self.logger.info(r'Completed images to pdf with result: {}'.format(process_result))
-
 
         self.logger.info('OCR output images path: {}'.format(self.ocr_output_images_dir))
         self.logger.info('OCR output pdf path: {}'.format(output_file_path))
