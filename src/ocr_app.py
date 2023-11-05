@@ -78,6 +78,7 @@ class OCRAPI:
             match_results = re.match('(.*?)([0-9]+)', file_path.stem)
             image_index = match_results.group(2)
             worksheet = workbook.add_worksheet(str(image_index))
+            worksheet.set_column(0, 0, 30)
 
             img = Image.open(file_path.as_posix())
             img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
@@ -86,7 +87,7 @@ class OCRAPI:
             output_head = [[
                     ['x1', 'y1'],
                     ['x2', 'y2'],
-                    ['x3, y3'],
+                    ['x3', 'y3'],
                     ['x4', 'y4']
                 ],
                 ('text', 'confidence_score')]
