@@ -11,19 +11,21 @@ from PIL import Image
 import xlsxwriter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from paddleocr import PaddleOCR, draw_ocr
+from ppocr.utils.logging import get_logger
 
 
 class OCRAPI:
     def __init__(self):
-        print('Start read config...')
+        self.logger = get_logger()
+        self.logger.info('Start read config...')
         self.config = self.read_config()
         self.images_dir_path = Path(self.config['images_dir_path'])
         self.ocr_output_images_dir = Path(self.config['ocr_output_images_dir'])
         self.image_file_prefix = self.config['image_file_prefix']
 
-        print('Start ocr model init...')
+        self.logger.info('Start ocr model init...')
         self.ocr_model = PaddleOCR(use_angle_cls=False, lang='en')
-        print('Completed ocr model init!')
+        self.logger.info('Completed ocr model init!')
 
     def read_config(self):
         dir_path = Path(__file__).resolve().parent
@@ -44,11 +46,11 @@ class OCRAPI:
                 rmtree(child_path)
 
     def ocr(self, input_pdf_file_path):
-        print('Start reset_dir_path...')
+        self.logger.info('Start reset_dir_path...')
         self.reset_dir_path(self.images_dir_path)
         self.reset_dir_path(self.ocr_output_images_dir)
 
-        print('Start pdf to images...')
+        self.logger.info('Start pdf to images...')
         output_images_dir_path = self.images_dir_path / self.image_file_prefix
         process_result = subprocess.run(['pdftoppm',
             '-png',
@@ -57,13 +59,13 @@ class OCRAPI:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
 
-        print('Completed pdftoppm with result:', process_result)
+        self.logger.info('Completed pdftoppm with result:'.format(process_result))
 
-        image_file_paths = list(images_dir_path.glob(r'{}-*.png'.format(self.image_file_prefix)))
+        image_file_paths = list(self.images_dir_path.glob(r'{}-*.png'.format(self.image_file_prefix)))
         image_file_paths.sort()
 
         for file_path in image_file_paths:
-            print('Start ocr for file:', file_path)
+            self.logger.info(r'Start ocr for file: {}'.format(file_path))
             result = ocr_model.ocr(file_path.as_posix(), cls=False)
             img = Image.open(file_path.as_posix())
             img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
@@ -79,14 +81,14 @@ class OCRAPI:
             ocr_output_image_path = self.ocr_output_images_dir / 'result_page_{}.jpg'.format(image_index)
             im_show.save(ocr_output_image_path.as_posix())
 
-        print('Completed ocr!')
+        self.logger.info('Completed ocr!')
         workbook = xlsxwriter.Workbook('hello.xlsx')
         worksheet = workbook.add_worksheet()
 
         worksheet.write('A1', 'Hello world')
 
         workbook.close()
-        print('OCR output images path:', self.ocr_output_images_dir)
+        self.logger.info('OCR output images path: {}'.format(self.ocr_output_images_dir))
 
 
 def main():
