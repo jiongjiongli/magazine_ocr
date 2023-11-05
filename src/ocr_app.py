@@ -14,11 +14,13 @@ from paddleocr import PaddleOCR, draw_ocr
 
 class OCRAPI:
     def __init__(self):
+        print('Start read config...')
         self.config = self.read_config()
         self.images_dir_path = Path(self.config['images_dir_path'])
         self.ocr_output_images_dir = Path(self.config['ocr_output_images_dir'])
         self.image_file_prefix = self.config['image_file_prefix']
 
+        print('Start ocr model init...')
         self.ocr_model = PaddleOCR(use_angle_cls=False, lang='en')
 
     def read_config(self):
@@ -43,7 +45,7 @@ class OCRAPI:
         self.reset_dir_path(self.images_dir_path)
         self.reset_dir_path(self.ocr_output_images_dir)
 
-        output_images_dir_path = images_dir_path / self.image_file_prefix
+        output_images_dir_path = self.images_dir_path / self.image_file_prefix
         process_result = subprocess.run(['pdftoppm',
             '-png',
             input_pdf_file_path.as_posix(),
@@ -69,7 +71,7 @@ class OCRAPI:
             im_show = Image.fromarray(im_show)
             match_results = re.match('(.*?)([0-9]+)', file_path.stem)
             image_index = match_results.group(2)
-            ocr_output_image_path = ocr_output_images_dir / 'result_page_{}.jpg'.format(image_index)
+            ocr_output_image_path = self.ocr_output_images_dir / 'result_page_{}.jpg'.format(image_index)
             im_show.save(ocr_output_image_path.as_posix())
 
         workbook = xlsxwriter.Workbook('hello.xlsx')
