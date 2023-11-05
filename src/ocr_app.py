@@ -16,7 +16,7 @@ from ppocr.utils.logging import get_logger
 
 class OCRAPI:
     def __init__(self):
-        self.logger = get_logger()
+        self.logger = get_logger(self.__class__.__name__)
         self.logger.info('Start read config...')
         self.config = self.read_config()
         self.images_dir_path = Path(self.config['images_dir_path'])
@@ -66,7 +66,7 @@ class OCRAPI:
 
         for file_path in image_file_paths:
             self.logger.info(r'Start ocr for file: {}'.format(file_path))
-            result = ocr_model.ocr(file_path.as_posix(), cls=False)
+            result = self.ocr_model.ocr(file_path.as_posix(), cls=False)
             img = Image.open(file_path.as_posix())
             img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
             res = result[0]
