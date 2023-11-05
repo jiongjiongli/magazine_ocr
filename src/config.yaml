@@ -1,4 +1,5 @@
 
-images_dir_path: "/content/output_images"
-ocr_output_images_dir: "/content/ocr_output_images"
+output_root_dir_path: "/content/outputs"
+images_dir_name: "output_images"
+ocr_output_images_dir_name: "ocr_output_images"
 image_file_prefix: "image"

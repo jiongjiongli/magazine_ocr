@@ -19,8 +19,9 @@ class OCRAPI:
         self.logger = get_logger(self.__class__.__name__)
         self.logger.info('Start read config...')
         self.config = self.read_config()
-        self.images_dir_path = Path(self.config['images_dir_path'])
-        self.ocr_output_images_dir = Path(self.config['ocr_output_images_dir'])
+        self.output_root_dir_path = Pth(self.config['output_root_dir_path'])
+        self.images_dir_path = self.output_root_dir_path / images_dir_name
+        self.ocr_output_images_dir = self.output_root_dir_path / ocr_output_images_dir_name
         self.image_file_prefix = self.config['image_file_prefix']
 
         self.logger.info('Start ocr model init...')
@@ -46,50 +47,84 @@ class OCRAPI:
                 rmtree(child_path)
 
     def ocr(self, input_pdf_file_path):
-        self.logger.info('Start reset_dir_path...')
+        self.logger.info(r'Start reset dir path {}...'.format(self.images_dir_path))
         self.reset_dir_path(self.images_dir_path)
+        self.logger.info(r'Start reset dir path {}...'.format(self.ocr_output_images_dir))
         self.reset_dir_path(self.ocr_output_images_dir)
 
         self.logger.info('Start pdf to images...')
         output_images_dir_path = self.images_dir_path / self.image_file_prefix
-        process_result = subprocess.run(['pdftoppm',
-            '-png',
-            input_pdf_file_path.as_posix(),
-            output_images_dir_path.as_posix()],
+        process_result = subprocess.run(
+            ['pdftoppm',
+                '-png',
+                input_pdf_file_path.as_posix(),
+                output_images_dir_path.as_posix()],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
 
         self.logger.info('Completed pdftoppm with result:'.format(process_result))
 
+        output_excel_file_path = self.output_root_dir_path / r'{}.xlsx'.format(input_pdf_file_path.stem)
+        workbook = xlsxwriter.Workbook(output_excel_file_path.as_posix())
         image_file_paths = list(self.images_dir_path.glob(r'{}-*.png'.format(self.image_file_prefix)))
         image_file_paths.sort()
 
         for file_path in image_file_paths:
             self.logger.info(r'Start ocr for file: {}'.format(file_path))
             result = self.ocr_model.ocr(file_path.as_posix(), cls=False)
+
+            match_results = re.match('(.*?)([0-9]+)', file_path.stem)
+            image_index = match_results.group(2)
+            worksheet = workbook.add_worksheet(str(image_index))
+
             img = Image.open(file_path.as_posix())
             img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
             res = result[0]
+
+            output_head = [[
+                    ['x1', 'y1'],
+                    ['x2', 'y2'],
+                    ['x3, y3'],
+                    ['x4', 'y4']
+                ],
+                ('text', 'confidence_score')]
+            row = 0
+
+            for line in [output_head] + res:
+                column = 0
+
+                box = line[0]
+                text = line[1][0]
+                score = line[1][1]
+
+                worksheet.write(row, column, text)
+                column += 1
+
+                for point in box:
+                    for coordinate in point:
+                        worksheet.write(row, column, coordinate)
+                        column += 1
+
+                worksheet.write(row, column, score)
+                column += 1
+
+                row += 1
+
             boxes = [line[0] for line in res]
             txts = [line[1][0] for line in res]
             scores = [line[1][1] for line in res]
             # im_show = draw_ocr(img, boxes, txts, scores, font_path='doc/fonts/simfang.ttf')
             im_show = draw_ocr(img, boxes, txts, scores, font_path='LiberationSans-Regular.ttf')
             im_show = Image.fromarray(im_show)
-            match_results = re.match('(.*?)([0-9]+)', file_path.stem)
-            image_index = match_results.group(2)
+
             ocr_output_image_path = self.ocr_output_images_dir / 'result_page_{}.jpg'.format(image_index)
             im_show.save(ocr_output_image_path.as_posix())
 
-        self.logger.info('Completed ocr!')
-        workbook = xlsxwriter.Workbook('hello.xlsx')
-        worksheet = workbook.add_worksheet()
-
-        worksheet.write('A1', 'Hello world')
-
         workbook.close()
-        self.logger.info('OCR output images path: {}'.format(self.ocr_output_images_dir))
 
+        self.logger.info('OCR output images path: {}'.format(self.ocr_output_images_dir))
+        self.logger.info('OCR output excel path: {}'.format(output_excel_file_path))
+        self.logger.info('Completed ocr!')
 
 def main():
     input_pdf_file_path = Path('/content/drive/MyDrive/data/cv/magazine/NT2023-0002RW Bi-Annual Publication 7 Spread v8 Digital FA.pdf')
