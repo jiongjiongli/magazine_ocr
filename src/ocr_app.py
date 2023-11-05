@@ -22,7 +22,7 @@ class OCRAPI:
         self.ocr_model = PaddleOCR(use_angle_cls=False, lang='en')
 
     def read_config(self):
-        dir_path = Path(__file__).resolve()
+        dir_path = Path(__file__).resolve().parent
         config_file_path = dir_path / 'config.yaml'
 
         with open(config_file_path, 'r') as file_stream:
