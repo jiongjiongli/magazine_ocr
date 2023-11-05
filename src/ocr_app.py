@@ -2,6 +2,7 @@ from pathlib import Path
 from shutil import rmtree
 import subprocess
 import json
+import logging
 import yaml
 import numpy as np
 import re
@@ -58,7 +59,7 @@ class OCRAPI:
 
         print('Completed pdftoppm with result:', process_result)
 
-        image_file_paths = list(output_images_dir_path.glob(r'{}-*.png'.format(self.image_file_prefix)))
+        image_file_paths = list(images_dir_path.glob(r'{}-*.png'.format(self.image_file_prefix)))
         image_file_paths.sort()
 
         for file_path in image_file_paths:
@@ -85,7 +86,7 @@ class OCRAPI:
         worksheet.write('A1', 'Hello world')
 
         workbook.close()
-        print('OCR output image path:', ocr_output_image_path)
+        print('OCR output images path:', self.ocr_output_images_dir)
 
 
 def main():
