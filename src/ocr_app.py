@@ -17,7 +17,7 @@ from ppocr.utils.logging import get_logger
 
 class OCRAPI:
     def __init__(self):
-        self.logger = get_logger(self.__class__.__name__)
+        self.logger = get_logger(self.__class__.__name__, log_level=logging.INFO)
         self.logger.info('Start read config...')
         self.config = self.read_config()
         self.output_root_dir_path = Path(self.config['output_root_dir_path'])
@@ -78,7 +78,7 @@ class OCRAPI:
             match_results = re.match('(.*?)([0-9]+)', file_path.stem)
             image_index = match_results.group(2)
             worksheet = workbook.add_worksheet(str(image_index))
-            worksheet.set_column(0, 0, 30)
+            worksheet.set_column(0, 0, 60)
 
             img = Image.open(file_path.as_posix())
             img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
@@ -125,7 +125,22 @@ class OCRAPI:
 
         workbook.close()
 
+        self.logger.info('Start images to pdf...')
+        input_files_path = self.ocr_output_images_dir / '*.png'
+        output_file_path = self.output_root_dir_path / r'{}_ocr.pdf'.format(input_pdf_file_path.stem)
+        'convert'
+        process_result = subprocess.run(
+            ['convert',
+                input_files_path.as_posix(),
+                output_file_path.as_posix()],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT)
+
+        self.logger.info(r'Completed images to pdf with result: {}'.format(process_result))
+
+
         self.logger.info('OCR output images path: {}'.format(self.ocr_output_images_dir))
+        self.logger.info('OCR output pdf path: {}'.format(output_file_path))
         self.logger.info('OCR output excel path: {}'.format(output_excel_file_path))
         self.logger.info('Completed ocr!')
 
