@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 from shutil import rmtree
 import subprocess
 import json
@@ -52,6 +53,7 @@ class OCRAPI:
         self.logger.info(r'Start reset dir path {}...'.format(self.ocr_output_images_dir))
         self.reset_dir_path(self.ocr_output_images_dir)
 
+        self.logger.info(r'Input pdf file path: {}'.format(input_pdf_file_path))
         self.logger.info('Start pdf to images...')
         output_images_dir_path = self.images_dir_path / self.image_file_prefix
         process_result = subprocess.run(
@@ -62,7 +64,7 @@ class OCRAPI:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
 
-        self.logger.info('Completed pdftoppm with result:'.format(process_result))
+        self.logger.info(r'Completed pdftoppm with result: {}'.format(process_result))
 
         output_excel_file_path = self.output_root_dir_path / r'{}.xlsx'.format(input_pdf_file_path.stem)
         workbook = xlsxwriter.Workbook(output_excel_file_path.as_posix())
@@ -127,7 +129,11 @@ class OCRAPI:
         self.logger.info('Completed ocr!')
 
 def main():
-    input_pdf_file_path = Path('/content/drive/MyDrive/data/cv/magazine/NT2023-0002RW Bi-Annual Publication 7 Spread v8 Digital FA.pdf')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input_pdf_file_path')
+    args = parser.parse_args()
+    # /content/drive/MyDrive/data/cv/magazine/NT2023-0002RW Bi-Annual Publication 7 Spread v8 Digital FA.pdf
+    input_pdf_file_path = Path(args.input_pdf_file_path)
 
     ocr_api = OCRAPI()
     ocr_api.ocr(input_pdf_file_path)
