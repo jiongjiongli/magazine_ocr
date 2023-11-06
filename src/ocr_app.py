@@ -11,7 +11,7 @@ import cv2
 from PIL import Image
 import xlsxwriter
 from sklearn.feature_extraction.text import TfidfVectorizer
-from paddleocr import PaddleOCR, draw_ocr, logger as ocr_logger
+from paddleocr import PaddleOCR, draw_ocr
 from ppocr.utils.logging import get_logger
 
 
@@ -150,6 +150,7 @@ def main():
     # /content/drive/MyDrive/data/cv/magazine/NT2023-0002RW Bi-Annual Publication 7 Spread v8 Digital FA.pdf
     input_pdf_file_path = Path(args.input_pdf_file_path)
 
+    ocr_logger = get_logger()
     ocr_logger.setLevel(logging.ERROR)
 
     ocr_api = OCRAPI()
